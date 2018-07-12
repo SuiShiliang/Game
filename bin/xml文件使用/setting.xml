@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<setting>
+	<!-- 游戏等级 gameLevel -->
+	<gameLevelContent>
+		<gameLevel>
+			<level>1</level>
+			<widthCount>9</widthCount>
+			<heightCount>9</heightCount>
+			<mineCount>10</mineCount>
+		</gameLevel>
+		<gameLevel>
+			<level>2</level>
+			<widthCount>16</widthCount>
+			<heightCount>16</heightCount>
+			<mineCount>40</mineCount>
+		</gameLevel>
+		<gameLevel>
+			<level>3</level>
+			<widthCount>16</widthCount>
+			<heightCount>30</heightCount>
+			<mineCount>99</mineCount>
+		</gameLevel>
+	</gameLevelContent>
+	<!-- 用户自定义游戏等级 -->
+	<userGameLevelContent>
+		<gameLevelByUser>
+			<widthCount>10</widthCount>
+			<heightCount>10</heightCount>
+			<mineCount>20</mineCount>
+		</gameLevelByUser>
+	</userGameLevelContent>
+	<!-- 游戏雷的形象 -->
+	<gameAppearanceOfMineContent>
+		<gameAppearanceOfMine>
+			<Mine>src/javafxGame01/resource/lei.png</Mine>
+			<Mine></Mine>
+		</gameAppearanceOfMine>
+	</gameAppearanceOfMineContent>
+	<!-- 游戏格子的颜色 -->
+	<gameAppearanceOfGirdContent>
+		<gameAppearanceOfGird>
+			<Grid>#03a9f4</Grid>
+			<Grid>#ff9800</Grid>
+		</gameAppearanceOfGird>
+	</gameAppearanceOfGirdContent>
+	<!-- 游戏中时钟的样式 -->
+	<gameTimeAppearance>
+		<time>src/javafxGame01/resource/time5.png</time>
+	</gameTimeAppearance>
+	<!-- 游戏格子的大小 -->
+	<gridSize>
+		<size>20</size>
+	</gridSize>
+	<!-- 游戏加载 -->
+	<gameLoad>
+		<!-- 获取时如果该项等于ByUser，则加载 userGameLevelContent中的数据-->
+		<gameLevel>1</gameLevel>
+		<!-- 第几个雷的样式 -->
+		<Mine>1</Mine>
+		<!-- 第几个格子的颜色 -->
+		<Gird>1</Gird>
+		<!-- 格子大小 -->
+		<size>1</size>
+	</gameLoad>
+</setting>

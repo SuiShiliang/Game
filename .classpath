@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/jdk1.8.0_111"/>
+	<classpathentry kind="con" path="org.eclipse.fx.ide.jdt.core.JAVAFX_CONTAINER"/>
+	<classpathentry kind="lib" path="F:/Eclipse插件/dom4j/dom4j-1.6.1.jar"/>
+	<classpathentry kind="lib" path="F:/Eclipse插件/json/json自行下载单个jar文件/commons-beanutils-1.9.3.jar"/>
+	<classpathentry kind="lib" path="F:/Eclipse插件/json/json自行下载单个jar文件/commons-collections-3.2.1.jar"/>
+	<classpathentry kind="lib" path="F:/Eclipse插件/json/json自行下载单个jar文件/commons-lang-2.6.jar"/>
+	<classpathentry kind="lib" path="F:/Eclipse插件/json/json自行下载单个jar文件/ezmorph-1.0.6.jar"/>
+	<classpathentry kind="lib" path="F:/Eclipse插件/json/json自行下载单个jar文件/json-lib-2.4-jdk15.jar"/>
+	<classpathentry kind="lib" path="F:/Eclipse插件/json/json自行下载单个jar文件/org.apache.commons.logging-1.0.4.v200706111724.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
