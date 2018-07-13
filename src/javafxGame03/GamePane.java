@@ -4,10 +4,14 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 
 import javafx.event.EventHandler;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.MenuBar;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -34,6 +38,8 @@ public class GamePane {
 	private static int gameLevel = 1;
 	// 雷数量
 	private static int mineCount = 0;
+	// 总雷的数量
+	private static int mineCountStatic = 0;
 	// 显示剩余雷的text组件
 	private static Text mineCountText = new Text();
 	// 游戏时间
@@ -53,25 +59,79 @@ public class GamePane {
 	// 格子的间隔颜色
 	private static String gridSpacingColor = "";
 	// 地图
-	private static GridPane map[][];
+	public static GridPane map[][];
 	//游戏是否开始标志
 	private static boolean gameBeginFlag = false;
 	//还有多少个格子没有打开
 	private static int gridNotOpenCount = 0;
 	//时间显示的线程
 	private static Thread timeThread;
+	//将传入进来的stage放入到这里，以便于使用
+	private static Stage gamePaneStage;
+	//创建菜单类
+	private MyMenuBar myMenuBar = new MyMenuBar();
 	
 	
 	//创建菜单栏
-	private static MenuBar createMenuBar(Stage stage) {
-		MenuBar bar = MyMenuBar.getMenuBar(stage);
+	private MenuBar createMenuBar(Stage stage) {
+//		MenuBar bar = MyMenuBar.getMenuBar(stage);
+		MenuBar bar = myMenuBar.getMenuBar(stage);
 		return bar;
 	}
+	
+	public void newGame() {
+		
+		for (int x = 0; x < gridWidthCount; x++) {
+			for (int y = 0; y < gridHeightCount; y++) {
+				map[x][y].setOpen(false);
+				map[x][y].getText().setText("");
+				map[x][y].getRectangle().setFill(Color.web(gridColor));
+				map[x][y].setBomb(false);
+				map[x][y].setHasBombCount(0);
+				if(map[x][y].getView() != null)
+					map[x][y].hideMineImage();
+			}
+		}
+		
+		payTime = 0;
+		tiemText.setText(Integer.toString(payTime));
+		mineCount = mineCountStatic;
+		mineCountText.setText(Integer.toString(mineCount));
+		// 设置该游戏等级应有的雷
+		for (int i = 0; i < mineCount;) {
+			int x = (int) (Math.random() * gridWidthCount);
+			int y = (int) (Math.random() * gridHeightCount);
+			if (map[x][y].isBomb())
+				continue;
+			map[x][y].setBomb(true);
+			map[x][y].setMineImagePath(mineImagePath);
+			i++;
+		}
+		// 设置格子附近的雷的数量
+		for (int x = 0; x < gridWidthCount; x++) {
+			for (int y = 0; y < gridHeightCount; y++) {
+
+				GridPane gridPane = map[x][y];
+				// 如果当前格子是雷，则直接跳过
+				if (gridPane.isBomb())
+					continue;
+				// stream().filter 为Java8及以上版本所有的一种循环函数，形似foreach
+				int hasBombCount = (int) getNeighbors(gridPane).stream().filter(e -> e.isBomb()).count();
+				/*
+				 * //上面写法的的for循环写法 int hasBombCount = 0; List<GridPane> list
+				 * =getNeighbors(gridPane); for(int i=0;i<list.size();i++) {
+				 * if(list.get(i).isBomb())hasBombCount++; }
+				 */
+				gridPane.setHasBombCount(hasBombCount);
+			}
+		}
+		myMenuBar.setMap(map);
+	}
 	//创建游戏主体页面
-	private static BorderPane createGameBodyPane(Pane mianpane) {
+	private BorderPane createGameBodyPane(Pane mianpane) {
 
 		map = new GridPane[gridWidthCount][gridHeightCount];
-
+		
 		BorderPane borderPane = new BorderPane();
 		borderPane.setLayoutX(borderSize * 2);
 		borderPane.setLayoutY(borderSize * 2 + 30);
@@ -103,41 +163,14 @@ public class GamePane {
 				borderPane.getChildren().addAll(gridPane);
 			}
 		}
-		//设置该游戏等级应有的雷
-		for (int i = 0; i < mineCount; ) {
-			int x = (int) (Math.random() * gridWidthCount);
-			int y = (int) (Math.random() * gridHeightCount);
-			if(map[x][y].isBomb())continue;
-			map[x][y].setBomb(true);
-			map[x][y].setMineImagePath(mineImagePath);
-			i++;
-		}
-		//设置格子附近的雷的数量
-		for (int x = 0; x < gridWidthCount; x++) {
-			for (int y = 0; y < gridHeightCount; y++) {
-
-				GridPane gridPane = map[x][y];
-				//如果当前格子是雷，则直接跳过
-				if(gridPane.isBomb())
-					continue;
-				//stream().filter 为Java8及以上版本所有的一种循环函数，形似foreach
-				int hasBombCount = (int) getNeighbors(gridPane).stream().filter(e -> e.isBomb()).count();
-				/*//上面写法的的for循环写法
-				int hasBombCount = 0;
-				List<GridPane> list =getNeighbors(gridPane);
-				for(int i=0;i<list.size();i++) {
-					if(list.get(i).isBomb())hasBombCount++;
-				}*/
-				gridPane.setHasBombCount(hasBombCount);
-			}
-		}
-
+		//创建有游戏，或新游戏
+		newGame();
 		mianpane.getChildren().addAll(borderPane);
 		mianpane.setStyle("-fx-background-color: black ;-fx-border-width: 1px ;");
 		return borderPane;
 	}
 	//获取当前格子周围的格子
-	public static List<GridPane> getNeighbors(GridPane gridPane){
+	private List<GridPane> getNeighbors(GridPane gridPane){
 		List<GridPane> list = new ArrayList<>();
 		/* 当前格子周围的坐标
 		 * (-1,-1) (-1, 0) (-1, 1)
@@ -162,7 +195,7 @@ public class GamePane {
 
 	//点中雷之后，显示所有的雷
 	@SuppressWarnings("deprecation")
-	private static void gameOver() {
+	private void gameOver() {
 		//游戏结束时使标志重新为FALSE
 		gameBeginFlag = false;
 		//游戏结束将线程种植
@@ -181,18 +214,76 @@ public class GamePane {
 				map[x][y].getText().setVisible(true);
 			}
 		}
+		//Alert.AlertType.NONE 没有任何提示等
+		Alert overAlert = new Alert(Alert.AlertType.NONE,
+				"游戏结束",
+				new ButtonType("新游戏",ButtonBar.ButtonData.YES),
+				new ButtonType("重新开始这一局",ButtonBar.ButtonData.HELP),
+				new ButtonType("退出",ButtonBar.ButtonData.NO)
+				);
+		overAlert.setTitle("游戏结束");
+		Optional<ButtonType> _buttonType = overAlert.showAndWait();
+		//开始新游戏
+		if(_buttonType.get().getButtonData().equals(ButtonBar.ButtonData.YES)) {
+			newGame();
+		}
+		//重新这一局
+		if (_buttonType.get().getButtonData().equals(ButtonBar.ButtonData.HELP)) {
+			ganemAgain();
+		}
+		//退出
+		if (_buttonType.get().getButtonData().equals(ButtonBar.ButtonData.NO)) {
+			gamePaneStage.close();
+		}
+		
+	}
+	
+	public void ganemAgain() {
+		
+		for(int x = 0; x < gridHeightCount; x++) {
+			for(int y = 0; y < gridWidthCount; y++) {
+				if(map[y][x].getView() != null)
+					map[y][x].hideMineImage();
+				map[y][x].getRectangle().setFill(Color.web(gridColor));
+				map[y][x].setOpen(false);
+				map[y][x].getText().setText("");
+			}
+		}
+		payTime = 0;
+		tiemText.setText(Integer.toString(payTime));
+		mineCount = mineCountStatic;
+		mineCountText.setText(Integer.toString(mineCount));
+		
 	}
 
 	@SuppressWarnings("deprecation")
-	private static void gameWinner() {
+	private void gameWinner() {
 		//游戏胜利将线程结束
 		timeThread.stop();
-		System.out.println("你赢了");
+
+		// Alert.AlertType.NONE 没有任何提示等
+		Alert winnerAlert = new Alert(Alert.AlertType.NONE, "游戏胜利", new ButtonType("新游戏", ButtonBar.ButtonData.YES),
+				new ButtonType("重新开始这一局", ButtonBar.ButtonData.HELP), new ButtonType("退出", ButtonBar.ButtonData.NO));
+		winnerAlert.setTitle("游戏胜利");
+		Optional<ButtonType> _buttonType = winnerAlert.showAndWait();
+		// 开始新游戏
+		if (_buttonType.get().getButtonData().equals(ButtonBar.ButtonData.YES)) {
+			newGame();
+		}
+		// 重新这一局
+		if (_buttonType.get().getButtonData().equals(ButtonBar.ButtonData.HELP)) {
+			ganemAgain();
+		}
+		// 退出
+		if (_buttonType.get().getButtonData().equals(ButtonBar.ButtonData.NO)) {
+			gamePaneStage.close();
+		}
 	}
 	
 	//标记雷
-	private static void markMine(GridPane gridPane) {
+	private void markMine(GridPane gridPane) {
 		String mark = gridPane.getText().getText().toString();
+		if(gridPane.isOpen)return;
 		if(mark.equals("")) {
 			gridPane.getText().setText("X");
 			mineCount--;
@@ -201,7 +292,7 @@ public class GamePane {
 			gridNotOpenCount--;
 			
 			//如果没有剩下的雷，则胜利
-			if(mineCount == 0 && gridNotOpenCount == 0) gameWinner();
+			if(mineCount == 0 && gridNotOpenCount <= 0) gameWinner();
 		}
 		else if(mark.equals("X")) {
 			gridPane.getText().setText("?");
@@ -216,7 +307,7 @@ public class GamePane {
 		
 	}
 	
-	public static void timeBegin() {
+	private void timeBegin() {
 		System.out.println("调用了线程");
 		
 		timeThread = new Thread(new Runnable() {
@@ -225,8 +316,8 @@ public class GamePane {
 				while(gameBeginFlag) {
 					try {
 						Thread.sleep(1000);
-						payTime += 1;
 						tiemText.setText(Integer.toString(payTime));
+						payTime += 1;
 					} catch (InterruptedException e) {
 						System.out.println("线程出现问题了");
 					}
@@ -238,7 +329,7 @@ public class GamePane {
 	}
 	
 	//翻开点击的格子
-	private static void open(GridPane gridPane) {
+	private void open(GridPane gridPane) {
 		
 		if(gameBeginFlag == false) {
 			gameBeginFlag = true;
@@ -263,7 +354,7 @@ public class GamePane {
 		
 		gridPane.setOpen(true);
 		
-		if(mineCount ==0 && gridNotOpenCount == 0)gameWinner();
+		if(mineCount ==0 && gridNotOpenCount <= 0)gameWinner();
 		//只有当前的格子的周围雷的数量不为0 的时候，才设置text显示雷的数量
 		if(gridPane.getHasBombCount() != 0)
 			gridPane.getText().setText(Integer.toString(gridPane.getHasBombCount()));
@@ -273,19 +364,18 @@ public class GamePane {
 		
 		gridPane.getRectangle().setFill(Color.WHITE);
 		//如果当前格子周围雷的数量为0，则获取其周围所有格子，并打开
-		if(gridPane.getHasBombCount() == 0) {
+		if(gridPane.getHasBombCount() == 0 && !gridPane.isBomb()) {
 			//获取周围格子，并打开，注意此函数由于调用了自身，所有是一个递归函数
 			getNeighbors(gridPane).forEach(e -> open(e));
 		}
 		
 	}
 	
-	private static void setTextFontColor(GridPane gridPane, int hasBombCount) {
+	private void setTextFontColor(GridPane gridPane, int hasBombCount) {
 
 		switch (hasBombCount) {
-		case 1:gridPane.getText().setFill(Color.web("#00bcd4"));	break;
-
-		case 2:gridPane.getText().setFill(Color.web("#009688"));	break;
+		case 1:gridPane.getText().setFill(Color.web("#00bcd4")); break;
+		case 2:gridPane.getText().setFill(Color.web("#009688")); break;
 		case 3:gridPane.getText().setFill(Color.web("#8bc34a")); break;
 		case 4:gridPane.getText().setFill(Color.web("#ffeb3b")); break;
 		case 5:gridPane.getText().setFill(Color.web("#ff9800")); break;
@@ -295,7 +385,7 @@ public class GamePane {
 		}
 	}
 	//创建成绩显示项
-	private static BorderPane createScoreDisplayPane() {
+	private BorderPane createScoreDisplayPane() {
 		BorderPane borderPane = new BorderPane();
 		borderPane.setLayoutX(borderSize * 2);
 		// 38为菜单栏的高度，需要添加进去
@@ -369,7 +459,7 @@ public class GamePane {
 		return borderPane;
 	}
 	//加载游戏数据
-	private static void initGame() {
+	private void initGame() {
 		// 最外面的JSON包装
 		JSONObject setting = GameSettingFile.initGameSetting();
 		JSONObject gameloadJson = setting.getJSONObject("gameLoad");
@@ -413,12 +503,18 @@ public class GamePane {
 		
 		borderPaneWidth = (gridWidthCount + 3) * borderSize;
 		borderPaneHeight = (gridHeightCount + 3) * borderSize + 35;
+		
+		mineCountStatic = mineCount;
 
 	}
 	//创建游戏页面
-	public static void createGamePane(Stage stage) {
+	@SuppressWarnings("deprecation")
+	public void createGamePane(Stage stage) {
+		gamePaneStage = stage;
 		// 初始化游戏数据
 		initGame();
+		//开始游戏时将时间设为0
+		payTime = 0;
 		//初始化时设置游戏开始标志为FALSE，即未开始
 		gameBeginFlag = false;
 		Pane mainPane = new Pane();
@@ -438,7 +534,24 @@ public class GamePane {
 		stage.setWidth(borderPaneWidth);
 		stage.setHeight(borderPaneHeight + 38);// 38为标题栏的高度
 		stage.setScene(scene);
-
+		stage.setOnCloseRequest(e->{
+			//点击关闭按钮时，弹出对话框
+			Alert exitAlert = new Alert(Alert.AlertType.NONE,
+					"确定退出吗？",
+					new ButtonType("确定",ButtonBar.ButtonData.YES),
+					new ButtonType("取消",ButtonBar.ButtonData.NO));
+			exitAlert.setTitle("确认");
+			//exitAlert.setHeaderText("sds");
+			//showAndWait(); 将在对话框消失以前不会执行之后的代码
+			Optional<ButtonType> _buttonType = exitAlert.showAndWait();
+			if(_buttonType.get().getButtonData().equals(ButtonBar.ButtonData.YES)) {
+				if(timeThread!=null)
+				timeThread.stop();
+			}
+			else if(_buttonType.get().getButtonData().equals(ButtonBar.ButtonData.NO)) {
+				e.consume();
+			}
+		});
 	}
 
 }

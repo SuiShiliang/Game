@@ -9,10 +9,9 @@ import javafx.stage.Stage;
 
 public class MyMenuBar{
 	
-	private static Stage mainStage;
+	private GridPane[][] map;
 	
-	public static MenuBar getMenuBar(Stage stage) {
-		mainStage = stage;
+	public MenuBar getMenuBar(Stage stage) {
 		//定义菜单栏
 		MenuBar bar = new MenuBar();
 		//设置菜单栏高度
@@ -49,20 +48,39 @@ public class MyMenuBar{
 		return bar;
 	}
 
-	public static void newGame() {
-		GamePane.createGamePane(mainStage);
+	public void newGame() {
+//		new GamePane().createGamePane(mainStage);
+		new GamePane().newGame();
+//		GamePane.createGamePane(mainStage);
 		System.out.println("新游戏");
 	}
-	public static void optionGame() {
+	public void optionGame() {
 		System.out.println("设置");
 	}
-	public static void changeGame() {
+	public void changeGame() {
 		System.out.println("更改外观");
+		for (int x = 0; x < map[0].length; x++) {
+			for (int y = 0; y < map.length; y++) {
+				System.out.print(map[y][x].getHasBombCount()+" ");
+			}
+			System.out.println();
+		}
+		
 	}
-	public static void displayScore() {
+	public void displayScore() {
 		System.out.println("显示成绩");
 	}
-	public static void gameHelp() {
+	public void gameHelp() {
 		System.out.println("帮助");
 	}
+
+	public GridPane[][] getMap() {
+		return map;
+	}
+
+	public void setMap(GridPane[][] map) {
+		this.map = map;
+	}
+
+	
 }

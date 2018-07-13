@@ -25,6 +25,9 @@ public class GridPane extends StackPane {
 	public void showMineImage() {
 		view.setVisible(true);
 	}
+	public void hideMineImage() {
+		view.setVisible(false);
+	}
 
 	public void setMineImagePath(String mineImagePath) {
 		Image mine;
@@ -124,5 +127,9 @@ public class GridPane extends StackPane {
 	public void setHasBombCount(int hasBombCount) {
 		this.hasBombCount = hasBombCount;
 	}
+	public ImageView getView() {
+		return view;
+	}
+	
 
 }

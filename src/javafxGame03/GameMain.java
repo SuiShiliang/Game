@@ -8,7 +8,8 @@ public class GameMain extends Application {
 	@Override
 	public void start(Stage primaryStage) throws Exception {
 		
-		GamePane.createGamePane(primaryStage);
+//		GamePane.createGamePane(primaryStage);
+		new GamePane().createGamePane(primaryStage);
 		primaryStage.setTitle("扫雷");
 		primaryStage.show();
 		primaryStage.setResizable(false);
